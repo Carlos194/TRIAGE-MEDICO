@@ -1,0 +1,158 @@
+/* TRIAGE input manager v2: Safari/iPad compatible */
+(() => {
+  'use strict';
+
+  const byId = id => document.getElementById(id);
+  const digits = (value, max) => String(value || '').replace(/\D/g, '').slice(0, max);
+
+  function parseBirth(value) {
+    const raw = digits(value, 8);
+    if (raw.length !== 8) return null;
+    const day = Number(raw.slice(0, 2));
+    const month = Number(raw.slice(2, 4));
+    const year = Number(raw.slice(4, 8));
+    const date = new Date(year, month - 1, day);
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day ||
+      year < 1900 ||
+      date > new Date()
+    ) return null;
+    return date;
+  }
+
+  function formatBirth(value) {
+    const raw = digits(value, 8);
+    if (raw.length <= 2) return raw.length === 2 ? raw + '/' : raw;
+    if (raw.length <= 4) return raw.slice(0, 2) + '/' + raw.slice(2) + (raw.length === 4 ? '/' : '');
+    return raw.slice(0, 2) + '/' + raw.slice(2, 4) + '/' + raw.slice(4);
+  }
+
+  function updateAge() {
+    const birth = byId('birth');
+    const age = byId('age');
+    if (!birth || !age) return;
+    const date = parseBirth(birth.value);
+    if (!date) {
+      age.textContent = digits(birth.value, 8).length === 8 ? 'Fecha inválida' : 'Sin fecha válida';
+      return;
+    }
+    const now = new Date();
+    let years = now.getFullYear() - date.getFullYear();
+    let months = now.getMonth() - date.getMonth();
+    let days = now.getDate() - date.getDate();
+    if (days < 0) {
+      months--;
+      days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    }
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    age.textContent = `${years} años, ${months} meses, ${days} días`;
+  }
+
+  function configureTextNumeric(el, max, callback) {
+    if (!el) return;
+    el.type = 'text';
+    el.inputMode = 'numeric';
+    el.pattern = '[0-9]*';
+    el.autocomplete = 'off';
+    el.addEventListener('input', () => {
+      el.value = digits(el.value, max);
+      callback?.();
+    }, true);
+    el.addEventListener('paste', () => setTimeout(() => {
+      el.value = digits(el.value, max);
+      callback?.();
+    }, 0), true);
+  }
+
+  function setupBirth() {
+    const el = byId('birth');
+    if (!el) return;
+    el.type = 'text';
+    el.inputMode = 'numeric';
+    el.pattern = '[0-9/]*';
+    el.maxLength = 10;
+    el.autocomplete = 'off';
+    const sanitize = () => {
+      el.value = formatBirth(el.value);
+      updateAge();
+    };
+    el.addEventListener('input', sanitize, true);
+    el.addEventListener('change', sanitize, true);
+    el.addEventListener('paste', () => setTimeout(sanitize, 0), true);
+    el.addEventListener('blur', sanitize, true);
+  }
+
+  function setupTemperature() {
+    const el = byId('temp');
+    if (!el) return;
+    el.type = 'text';
+    el.inputMode = 'decimal';
+    el.pattern = '[0-9.]*';
+    el.maxLength = 4;
+    el.addEventListener('input', () => {
+      let value = el.value.replace(',', '.').replace(/[^0-9.]/g, '');
+      const parts = value.split('.');
+      el.value = parts[0].slice(0, 2) + (parts.length > 1 ? '.' + parts.slice(1).join('').slice(0, 1) : '');
+      window.evaluate?.();
+    }, true);
+  }
+
+  function setupBloodPressure() {
+    const el = byId('bp');
+    if (!el) return;
+    el.type = 'text';
+    el.inputMode = 'numeric';
+    el.pattern = '[0-9/]*';
+    el.maxLength = 7;
+    el.addEventListener('input', () => {
+      const raw = String(el.value || '').replace(/[^0-9/]/g, '');
+      const numbers = raw.replace(/\D/g, '').slice(0, 6);
+      if (raw.includes('/')) {
+        const [a = '', ...rest] = raw.split('/');
+        el.value = digits(a, 3) + '/' + digits(rest.join(''), 3);
+      } else if (numbers.length > 3) {
+        el.value = numbers.slice(0, 3) + '/' + numbers.slice(3);
+      } else {
+        el.value = numbers;
+      }
+      window.evaluate?.();
+    }, true);
+  }
+
+  function blockInvalidBirthBeforeSave() {
+    const button = byId('savePrintBtn');
+    if (!button) return;
+    button.addEventListener('click', event => {
+      const birth = byId('birth');
+      if (!birth || parseBirth(birth.value)) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      alert('Capture una fecha de nacimiento real en formato DD/MM/AAAA.');
+      birth.focus();
+    }, true);
+  }
+
+  function setup() {
+    setupBirth();
+    configureTextNumeric(byId('profileLicense'), 12);
+    configureTextNumeric(byId('nss'), 11);
+    configureTextNumeric(byId('hr'), 3, () => window.evaluate?.());
+    configureTextNumeric(byId('rr'), 2, () => window.evaluate?.());
+    configureTextNumeric(byId('glucose'), 3, () => window.evaluate?.());
+    configureTextNumeric(byId('spo2'), 3, () => window.evaluate?.());
+    setupTemperature();
+    setupBloodPressure();
+    blockInvalidBirthBeforeSave();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup, { once: true });
+  } else {
+    setup();
+  }
+})();
