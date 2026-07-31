@@ -1,0 +1,62 @@
+name: Fix numeric inputs
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-numeric-inputs.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch robust numeric masks
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = "</script></body></html>"
+          patch = r'''
+// Parche robusto para Safari/iPad: fecha y campos numéricos
+(function(){
+  const onlyDigits=(el,max)=>{el.value=el.value.replace(/\D/g,'').slice(0,max)};
+  const formatBirth=()=>{
+    const el=document.getElementById('birth');
+    if(!el)return;
+    const d=el.value.replace(/\D/g,'').slice(0,8);
+    el.value=d.length<=2?d:d.length<=4?d.slice(0,2)+'/'+d.slice(2):d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);
+    if(typeof calcAge==='function')calcAge();
+  };
+  const setup=()=>{
+    const birth=document.getElementById('birth');
+    if(birth){
+      birth.type='text';birth.inputMode='numeric';birth.pattern='[0-9/]*';birth.maxLength=10;
+      birth.addEventListener('input',formatBirth,true);
+      birth.addEventListener('change',formatBirth,true);
+      birth.addEventListener('paste',()=>setTimeout(formatBirth,0),true);
+    }
+    const nss=document.getElementById('nss');
+    if(nss){nss.type='text';nss.inputMode='numeric';nss.pattern='[0-9]*';nss.addEventListener('input',()=>onlyDigits(nss,11),true)}
+    const lic=document.getElementById('profileLicense');
+    if(lic){lic.type='text';lic.inputMode='numeric';lic.pattern='[0-9]*';lic.addEventListener('input',()=>onlyDigits(lic,12),true)}
+    ['hr','rr','glucose','spo2'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.type='text';el.inputMode='numeric';el.pattern='[0-9]*';el.addEventListener('input',()=>{onlyDigits(el,3);if(typeof evaluate==='function')evaluate()},true)});
+    const temp=document.getElementById('temp');
+    if(temp){temp.type='text';temp.inputMode='decimal';temp.addEventListener('input',()=>{let v=temp.value.replace(/[^0-9.]/g,'');const a=v.split('.');temp.value=a[0].slice(0,2)+(a.length>1?'.'+a.slice(1).join('').slice(0,1):'');if(typeof evaluate==='function')evaluate()},true)}
+    const bp=document.getElementById('bp');
+    if(bp){bp.type='text';bp.inputMode='numeric';bp.pattern='[0-9/]*';bp.addEventListener('input',()=>{let v=bp.value.replace(/[^0-9/]/g,'').slice(0,7);const parts=v.split('/');bp.value=parts.length>1?parts[0].slice(0,3)+'/'+parts.slice(1).join('').slice(0,3):v.replace(/\D/g,'').slice(0,3);if(typeof evaluate==='function')evaluate()},true)}
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
+})();
+'''
+          if 'Parche robusto para Safari/iPad' not in s:
+              s = s.replace(marker, patch + '\n' + marker)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Fix date mask and numeric-only inputs"
+          git push
