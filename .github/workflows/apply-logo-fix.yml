@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Link logo stylesheet
+      - name: Force fresh logo stylesheet
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          tag='<link rel="stylesheet" href="logo-fix.css?v=20260731-1">'
-          if tag not in s:
-              s=s.replace('</head>', tag+'\n</head>')
+          s=s.replace('logo-fix.css?v=20260731-1','logo-fix.css?v=20260731-3')
+          if 'http-equiv="Cache-Control"' not in s:
+              s=s.replace('<meta name="theme-color" content="#08796c">','<meta name="theme-color" content="#08796c"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">')
           p.write_text(s, encoding='utf-8')
           PY
       - name: Commit changes
@@ -26,5 +26,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Fix institutional logo proportions"
+          git diff --cached --quiet || git commit -m "Force refresh logo stylesheet"
           git push
