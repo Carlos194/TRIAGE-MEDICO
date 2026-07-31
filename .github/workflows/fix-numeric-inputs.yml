@@ -1,62 +1,202 @@
-name: Fix numeric inputs
+name: Refactor input handling
+
 on:
   push:
     paths:
       - '.github/workflows/fix-numeric-inputs.yml'
+  workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
-  patch:
+  refactor:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch robust numeric masks
+
+      - name: Create reusable input manager
+        run: |
+          cat > input-manager.js <<'JS'
+          /* TRIAGE input manager v2: Safari/iPad compatible */
+          (() => {
+            'use strict';
+
+            const byId = id => document.getElementById(id);
+            const digits = (value, max) => String(value || '').replace(/\D/g, '').slice(0, max);
+
+            function parseBirth(value) {
+              const raw = digits(value, 8);
+              if (raw.length !== 8) return null;
+              const day = Number(raw.slice(0, 2));
+              const month = Number(raw.slice(2, 4));
+              const year = Number(raw.slice(4, 8));
+              const date = new Date(year, month - 1, day);
+              if (
+                date.getFullYear() !== year ||
+                date.getMonth() !== month - 1 ||
+                date.getDate() !== day ||
+                year < 1900 ||
+                date > new Date()
+              ) return null;
+              return date;
+            }
+
+            function formatBirth(value) {
+              const raw = digits(value, 8);
+              if (raw.length <= 2) return raw.length === 2 ? raw + '/' : raw;
+              if (raw.length <= 4) return raw.slice(0, 2) + '/' + raw.slice(2) + (raw.length === 4 ? '/' : '');
+              return raw.slice(0, 2) + '/' + raw.slice(2, 4) + '/' + raw.slice(4);
+            }
+
+            function updateAge() {
+              const birth = byId('birth');
+              const age = byId('age');
+              if (!birth || !age) return;
+              const date = parseBirth(birth.value);
+              if (!date) {
+                age.textContent = digits(birth.value, 8).length === 8 ? 'Fecha inválida' : 'Sin fecha válida';
+                return;
+              }
+              const now = new Date();
+              let years = now.getFullYear() - date.getFullYear();
+              let months = now.getMonth() - date.getMonth();
+              let days = now.getDate() - date.getDate();
+              if (days < 0) {
+                months--;
+                days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+              }
+              if (months < 0) {
+                years--;
+                months += 12;
+              }
+              age.textContent = `${years} años, ${months} meses, ${days} días`;
+            }
+
+            function configureTextNumeric(el, max, callback) {
+              if (!el) return;
+              el.type = 'text';
+              el.inputMode = 'numeric';
+              el.pattern = '[0-9]*';
+              el.autocomplete = 'off';
+              el.addEventListener('input', () => {
+                el.value = digits(el.value, max);
+                callback?.();
+              }, true);
+              el.addEventListener('paste', () => setTimeout(() => {
+                el.value = digits(el.value, max);
+                callback?.();
+              }, 0), true);
+            }
+
+            function setupBirth() {
+              const el = byId('birth');
+              if (!el) return;
+              el.type = 'text';
+              el.inputMode = 'numeric';
+              el.pattern = '[0-9/]*';
+              el.maxLength = 10;
+              el.autocomplete = 'off';
+              const sanitize = () => {
+                el.value = formatBirth(el.value);
+                updateAge();
+              };
+              el.addEventListener('input', sanitize, true);
+              el.addEventListener('change', sanitize, true);
+              el.addEventListener('paste', () => setTimeout(sanitize, 0), true);
+              el.addEventListener('blur', sanitize, true);
+            }
+
+            function setupTemperature() {
+              const el = byId('temp');
+              if (!el) return;
+              el.type = 'text';
+              el.inputMode = 'decimal';
+              el.pattern = '[0-9.]*';
+              el.maxLength = 4;
+              el.addEventListener('input', () => {
+                let value = el.value.replace(',', '.').replace(/[^0-9.]/g, '');
+                const parts = value.split('.');
+                el.value = parts[0].slice(0, 2) + (parts.length > 1 ? '.' + parts.slice(1).join('').slice(0, 1) : '');
+                window.evaluate?.();
+              }, true);
+            }
+
+            function setupBloodPressure() {
+              const el = byId('bp');
+              if (!el) return;
+              el.type = 'text';
+              el.inputMode = 'numeric';
+              el.pattern = '[0-9/]*';
+              el.maxLength = 7;
+              el.addEventListener('input', () => {
+                const raw = String(el.value || '').replace(/[^0-9/]/g, '');
+                const numbers = raw.replace(/\D/g, '').slice(0, 6);
+                if (raw.includes('/')) {
+                  const [a = '', ...rest] = raw.split('/');
+                  el.value = digits(a, 3) + '/' + digits(rest.join(''), 3);
+                } else if (numbers.length > 3) {
+                  el.value = numbers.slice(0, 3) + '/' + numbers.slice(3);
+                } else {
+                  el.value = numbers;
+                }
+                window.evaluate?.();
+              }, true);
+            }
+
+            function blockInvalidBirthBeforeSave() {
+              const button = byId('savePrintBtn');
+              if (!button) return;
+              button.addEventListener('click', event => {
+                const birth = byId('birth');
+                if (!birth || parseBirth(birth.value)) return;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                alert('Capture una fecha de nacimiento real en formato DD/MM/AAAA.');
+                birth.focus();
+              }, true);
+            }
+
+            function setup() {
+              setupBirth();
+              configureTextNumeric(byId('profileLicense'), 12);
+              configureTextNumeric(byId('nss'), 11);
+              configureTextNumeric(byId('hr'), 3, () => window.evaluate?.());
+              configureTextNumeric(byId('rr'), 2, () => window.evaluate?.());
+              configureTextNumeric(byId('glucose'), 3, () => window.evaluate?.());
+              configureTextNumeric(byId('spo2'), 3, () => window.evaluate?.());
+              setupTemperature();
+              setupBloodPressure();
+              blockInvalidBirthBeforeSave();
+            }
+
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', setup, { once: true });
+            } else {
+              setup();
+            }
+          })();
+          JS
+
+      - name: Load input manager from index
         run: |
           python - <<'PY'
           from pathlib import Path
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-          marker = "</script></body></html>"
-          patch = r'''
-// Parche robusto para Safari/iPad: fecha y campos numéricos
-(function(){
-  const onlyDigits=(el,max)=>{el.value=el.value.replace(/\D/g,'').slice(0,max)};
-  const formatBirth=()=>{
-    const el=document.getElementById('birth');
-    if(!el)return;
-    const d=el.value.replace(/\D/g,'').slice(0,8);
-    el.value=d.length<=2?d:d.length<=4?d.slice(0,2)+'/'+d.slice(2):d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);
-    if(typeof calcAge==='function')calcAge();
-  };
-  const setup=()=>{
-    const birth=document.getElementById('birth');
-    if(birth){
-      birth.type='text';birth.inputMode='numeric';birth.pattern='[0-9/]*';birth.maxLength=10;
-      birth.addEventListener('input',formatBirth,true);
-      birth.addEventListener('change',formatBirth,true);
-      birth.addEventListener('paste',()=>setTimeout(formatBirth,0),true);
-    }
-    const nss=document.getElementById('nss');
-    if(nss){nss.type='text';nss.inputMode='numeric';nss.pattern='[0-9]*';nss.addEventListener('input',()=>onlyDigits(nss,11),true)}
-    const lic=document.getElementById('profileLicense');
-    if(lic){lic.type='text';lic.inputMode='numeric';lic.pattern='[0-9]*';lic.addEventListener('input',()=>onlyDigits(lic,12),true)}
-    ['hr','rr','glucose','spo2'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.type='text';el.inputMode='numeric';el.pattern='[0-9]*';el.addEventListener('input',()=>{onlyDigits(el,3);if(typeof evaluate==='function')evaluate()},true)});
-    const temp=document.getElementById('temp');
-    if(temp){temp.type='text';temp.inputMode='decimal';temp.addEventListener('input',()=>{let v=temp.value.replace(/[^0-9.]/g,'');const a=v.split('.');temp.value=a[0].slice(0,2)+(a.length>1?'.'+a.slice(1).join('').slice(0,1):'');if(typeof evaluate==='function')evaluate()},true)}
-    const bp=document.getElementById('bp');
-    if(bp){bp.type='text';bp.inputMode='numeric';bp.pattern='[0-9/]*';bp.addEventListener('input',()=>{let v=bp.value.replace(/[^0-9/]/g,'').slice(0,7);const parts=v.split('/');bp.value=parts.length>1?parts[0].slice(0,3)+'/'+parts.slice(1).join('').slice(0,3):v.replace(/\D/g,'').slice(0,3);if(typeof evaluate==='function')evaluate()},true)}
-  };
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
-})();
-'''
-          if 'Parche robusto para Safari/iPad' not in s:
-              s = s.replace(marker, patch + '\n' + marker)
-          p.write_text(s, encoding='utf-8')
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+          tag = '<script src="input-manager.js?v=20260731-2"></script>'
+          if 'input-manager.js' not in html:
+              html = html.replace('</body></html>', tag + '\n</body></html>')
+          else:
+              import re
+              html = re.sub(r'<script src="input-manager\.js[^>]*></script>', tag, html)
+          path.write_text(html, encoding='utf-8')
           PY
-      - name: Commit patch
+
+      - name: Commit refactor
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          git diff --cached --quiet || git commit -m "Fix date mask and numeric-only inputs"
+          git add index.html input-manager.js
+          git diff --cached --quiet || git commit -m "Refactor date and numeric input handling"
           git push
