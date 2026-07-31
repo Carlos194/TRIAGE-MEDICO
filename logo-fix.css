@@ -1,0 +1,41 @@
+/* Corrección institucional de logotipos: pantalla e impresión */
+.logo{
+  width:90px;
+  height:55px;
+  padding:7px 9px;
+  overflow:hidden;
+  background:#fff;
+}
+.logo img{
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  object-position:center;
+}
+
+@media print{
+  .phead{
+    grid-template-columns:112px 1fr 165px!important;
+  }
+  .plogo{
+    height:58px!important;
+    padding:5px 9px!important;
+    overflow:hidden!important;
+    background:#fff!important;
+  }
+  .plogo img{
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    max-width:100%!important;
+    max-height:100%!important;
+    object-fit:contain!important;
+    object-position:center!important;
+  }
+  .pcenter{
+    padding:0 4px!important;
+  }
+}
