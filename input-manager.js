@@ -1,9 +1,120 @@
-/* TRIAGE input manager v2: Safari/iPad compatible */
+/* TRIAGE input manager v3: Safari/iPad compatible + institutional themes */
 (() => {
   'use strict';
 
   const byId = id => document.getElementById(id);
   const digits = (value, max) => String(value || '').replace(/\D/g, '').slice(0, max);
+
+  const institutionalThemes = {
+    imss: {
+      primary: '#006847',
+      secondary: '#0b5d46',
+      accent: '#bc955c',
+      background: '#edf5f1',
+      line: '#cddfd7',
+      ink: '#173a30'
+    },
+    bienestar: {
+      primary: '#611232',
+      secondary: '#9f2241',
+      accent: '#bc955c',
+      background: '#f7eff2',
+      line: '#e2cdd5',
+      ink: '#421125'
+    },
+    salud: {
+      primary: '#611232',
+      secondary: '#9f2241',
+      accent: '#bc955c',
+      background: '#f7eff2',
+      line: '#e2cdd5',
+      ink: '#421125'
+    },
+    issste: {
+      primary: '#005f73',
+      secondary: '#007f86',
+      accent: '#78a22f',
+      background: '#edf6f7',
+      line: '#c9dfe2',
+      ink: '#173c43'
+    },
+    private: {
+      primary: '#334155',
+      secondary: '#475569',
+      accent: '#94a3b8',
+      background: '#f1f5f9',
+      line: '#d7dee7',
+      ink: '#1e293b'
+    }
+  };
+
+  function getStoredProfile() {
+    try {
+      return JSON.parse(localStorage.getItem('triageProfileV3') || 'null');
+    } catch {
+      return null;
+    }
+  }
+
+  function applyInstitutionTheme(institution) {
+    const key = institutionalThemes[institution] ? institution : 'private';
+    const theme = institutionalThemes[key];
+    const root = document.documentElement;
+    root.dataset.institution = key;
+    root.style.setProperty('--p', theme.primary);
+    root.style.setProperty('--s', theme.secondary);
+    root.style.setProperty('--a', theme.accent);
+    root.style.setProperty('--bg', theme.background);
+    root.style.setProperty('--line', theme.line);
+    root.style.setProperty('--ink', theme.ink);
+    document.body?.setAttribute('data-institution', key);
+  }
+
+  function setupInstitutionTheme() {
+    const selector = byId('profileInstitution');
+    const profileButton = byId('profileBtn');
+    const editButton = byId('editProfileBtn');
+    const profile = getStoredProfile();
+
+    applyInstitutionTheme(profile?.institution || selector?.value || 'bienestar');
+
+    selector?.addEventListener('change', () => applyInstitutionTheme(selector.value));
+    profileButton?.addEventListener('click', () => {
+      applyInstitutionTheme(selector?.value || 'bienestar');
+      setTimeout(() => applyInstitutionTheme(getStoredProfile()?.institution || selector?.value || 'bienestar'), 0);
+    });
+    editButton?.addEventListener('click', () => {
+      setTimeout(() => applyInstitutionTheme(selector?.value || getStoredProfile()?.institution || 'bienestar'), 0);
+    });
+
+    window.addEventListener('storage', event => {
+      if (event.key === 'triageProfileV3') applyInstitutionTheme(getStoredProfile()?.institution || 'bienestar');
+    });
+  }
+
+  function enhancePrintForm() {
+    const originalBuildPrint = window.buildPrint;
+    if (typeof originalBuildPrint !== 'function') return;
+
+    window.buildPrint = function enhancedBuildPrint(visit) {
+      originalBuildPrint(visit);
+      const sheet = byId('printSheet');
+      const meta = sheet?.querySelector('.meta');
+      const form = sheet?.querySelector('.form');
+      const institution = visit?.institution || getStoredProfile()?.institution || 'bienestar';
+      const classifiedAt = new Date(visit?.savedAt || Date.now());
+
+      if (form) {
+        form.dataset.institution = institution;
+        form.classList.add(`print-${institution}`);
+      }
+      if (meta) {
+        const date = classifiedAt.toLocaleDateString('es-MX');
+        const time = classifiedAt.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        meta.innerHTML = `<div><b>Fecha:</b> ${date}</div><div><b>Hora de clasificación:</b> ${time}</div>`;
+      }
+    };
+  }
 
   function parseBirth(value) {
     const raw = digits(value, 8);
@@ -138,6 +249,8 @@
   }
 
   function setup() {
+    setupInstitutionTheme();
+    enhancePrintForm();
     setupBirth();
     configureTextNumeric(byId('profileLicense'), 12);
     configureTextNumeric(byId('nss'), 11);
