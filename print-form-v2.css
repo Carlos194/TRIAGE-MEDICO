@@ -1,96 +1,32 @@
-/* Formato institucional de impresión v2: IMSS, ISSSTE e IMSS-Bienestar */
-@media print {
-  @page { size: Letter portrait; margin: 6mm; }
-  #printSheet { background:#fff !important; }
-  .form {
-    border:1.4px solid #111 !important;
-    font-family:Arial,Helvetica,sans-serif !important;
-    background:#fff !important;
-  }
-  .phead {
-    display:grid !important;
-    grid-template-columns:36mm 1fr 49mm !important;
-    min-height:37mm !important;
-    padding:0 !important;
-    gap:0 !important;
-    border-bottom:1.4px solid #111 !important;
-    align-items:stretch !important;
-  }
-  .plogo {
-    height:auto !important;
-    min-height:37mm !important;
-    padding:3.5mm !important;
-    border-right:1.4px solid #111 !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    overflow:visible !important;
-    background:#fff !important;
-  }
-  .plogo img {
-    display:block !important;
-    width:auto !important;
-    height:auto !important;
-    max-width:100% !important;
-    max-height:29mm !important;
-    object-fit:contain !important;
-    object-position:center !important;
-    transform:none !important;
-    clip-path:none !important;
-  }
-  .pcenter {
-    display:flex !important;
-    flex-direction:column !important;
-    justify-content:center !important;
-    align-items:center !important;
-    text-align:center !important;
-    padding:2.5mm 4mm !important;
-  }
-  .pinst { font-size:13px !important; line-height:1.15 !important; color:#103f2d !important; }
-  .phospital { font-size:11px !important; line-height:1.2 !important; margin-top:2.2mm !important; }
-  .ptitle { font-size:11px !important; line-height:1.2 !important; margin-top:2.2mm !important; }
-  .meta {
-    display:flex !important;
-    flex-direction:column !important;
-    justify-content:center !important;
-    padding:2.5mm 3mm !important;
-    font-size:8.2px !important;
-    line-height:1.65 !important;
-    text-align:right !important;
-  }
-  .bar {
-    background:#f1f1f1 !important;
-    color:#111 !important;
-    border-top:1.2px solid #111 !important;
-    border-bottom:1.2px solid #111 !important;
-    font-size:10px !important;
-    padding:2.2mm 1.5mm !important;
-  }
-  .prow { border-bottom:1px solid #111 !important; }
-  .pcell { min-height:13mm !important; padding:2.2mm 2.5mm !important; }
-  .plab { font-size:7.2px !important; }
-  .pval { font-size:9px !important; line-height:1.25 !important; }
-  .preason { min-height:17mm !important; padding:3mm !important; }
-  .c3 { grid-template-columns:1.75fr 1.1fr .9fr !important; }
-  .c4 { grid-template-columns:1.25fr 1.2fr .9fr .9fr !important; }
-  .c5 { grid-template-columns:1.15fr 1.05fr 1.05fr .85fr .85fr !important; }
-  .c6 { grid-template-columns:repeat(6,1fr) !important; }
-  .triage { border-bottom:1px solid #111 !important; }
-  .tl { padding:3mm 1mm !important; font-size:8.5px !important; }
-  .summary { grid-template-columns:1fr 1fr !important; }
-  .box { min-height:31mm !important; padding:3mm !important; }
-  .sign { min-height:18mm !important; padding:3mm !important; }
-  .note { font-size:6.8px !important; padding:2mm 2.5mm !important; }
+/* Formato institucional de impresión v3: una hoja carta y temas dinámicos */
+
+/* Tema institucional en pantalla */
+html[data-institution="imss"] .header,
+body[data-institution="imss"] .header {
+  background:linear-gradient(135deg,#006847,#0b5d46) !important;
+  border-bottom-color:#bc955c !important;
+}
+html[data-institution="bienestar"] .header,
+html[data-institution="salud"] .header,
+body[data-institution="bienestar"] .header,
+body[data-institution="salud"] .header {
+  background:linear-gradient(135deg,#611232,#9f2241) !important;
+  border-bottom-color:#bc955c !important;
+}
+html[data-institution="issste"] .header,
+body[data-institution="issste"] .header {
+  background:linear-gradient(135deg,#005f73,#007f86) !important;
+  border-bottom-color:#78a22f !important;
 }
 
-/* Encabezado web con logotipo completo */
 .logo {
-  width:94px !important;
-  height:58px !important;
+  width:100px !important;
+  height:60px !important;
   padding:6px 8px !important;
   overflow:visible !important;
 }
 .logo img {
+  display:block !important;
   width:auto !important;
   height:auto !important;
   max-width:100% !important;
@@ -98,4 +34,233 @@
   object-fit:contain !important;
   object-position:center !important;
   transform:none !important;
+}
+
+@media print {
+  @page { size:Letter portrait; margin:5mm; }
+
+  html,body {
+    width:100% !important;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    background:#fff !important;
+  }
+
+  * {
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+
+  #printSheet {
+    display:block !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    background:#fff !important;
+  }
+
+  .form {
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    border:1.2px solid #111 !important;
+    font-family:Arial,Helvetica,sans-serif !important;
+    background:#fff !important;
+    color:#111 !important;
+    overflow:hidden !important;
+  }
+
+  .phead,
+  .prow,
+  .triage,
+  .summary,
+  .sign,
+  .bar {
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+  }
+
+  .phead {
+    display:grid !important;
+    grid-template-columns:34mm 1fr 44mm !important;
+    min-height:31mm !important;
+    padding:0 !important;
+    gap:0 !important;
+    border-bottom:1.2px solid #111 !important;
+    align-items:stretch !important;
+  }
+
+  .plogo {
+    min-height:31mm !important;
+    height:auto !important;
+    padding:3mm !important;
+    border-right:1.2px solid #111 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    overflow:visible !important;
+    background:#fff !important;
+  }
+
+  .plogo img {
+    display:block !important;
+    width:auto !important;
+    height:auto !important;
+    max-width:100% !important;
+    max-height:24mm !important;
+    object-fit:contain !important;
+    object-position:center !important;
+    transform:none !important;
+    clip-path:none !important;
+  }
+
+  .pcenter {
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    align-items:center !important;
+    text-align:center !important;
+    padding:2mm 3mm !important;
+  }
+
+  .pinst {
+    font-size:11.5px !important;
+    line-height:1.12 !important;
+    color:#111 !important;
+  }
+  .phospital {
+    font-size:10px !important;
+    line-height:1.15 !important;
+    margin-top:1.6mm !important;
+  }
+  .ptitle {
+    font-size:10px !important;
+    line-height:1.15 !important;
+    margin-top:1.6mm !important;
+  }
+
+  .meta {
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    gap:2.2mm !important;
+    padding:2mm 2.5mm !important;
+    font-size:8.4px !important;
+    line-height:1.35 !important;
+    text-align:right !important;
+  }
+
+  .bar {
+    background:#f1f1f1 !important;
+    color:#111 !important;
+    border-top:1px solid #111 !important;
+    border-bottom:1px solid #111 !important;
+    font-size:9px !important;
+    padding:1.6mm 1.2mm !important;
+  }
+
+  .form.print-imss .bar { background:#e7f1ec !important; }
+  .form.print-bienestar .bar,
+  .form.print-salud .bar { background:#f3e8ed !important; }
+  .form.print-issste .bar { background:#e6f1f2 !important; }
+
+  .prow { border-bottom:1px solid #111 !important; }
+  .pcell {
+    min-height:10.5mm !important;
+    padding:1.6mm 2mm !important;
+    overflow:hidden !important;
+  }
+  .plab {
+    font-size:6.7px !important;
+    line-height:1.1 !important;
+  }
+  .pval {
+    font-size:8.2px !important;
+    line-height:1.15 !important;
+    margin-top:1.2mm !important;
+    overflow-wrap:anywhere !important;
+    word-break:break-word !important;
+  }
+
+  .preason {
+    min-height:13mm !important;
+    max-height:18mm !important;
+    padding:2.2mm !important;
+    overflow:hidden !important;
+  }
+  .preason .pval {
+    display:-webkit-box !important;
+    -webkit-box-orient:vertical !important;
+    -webkit-line-clamp:4 !important;
+    overflow:hidden !important;
+  }
+
+  .c3 { grid-template-columns:1.75fr 1.05fr .85fr !important; }
+  .c4 { grid-template-columns:1.3fr 1.2fr .9fr .8fr !important; }
+  .c5 { grid-template-columns:1.18fr 1fr 1.05fr .78fr .8fr !important; }
+  .c6 { grid-template-columns:repeat(6,minmax(0,1fr)) !important; }
+
+  .c6 .pcell { padding-left:1.2mm !important; padding-right:1.2mm !important; }
+  .c6 .plab { font-size:6px !important; }
+  .c6 .pval { font-size:7.8px !important; }
+
+  .triage {
+    display:grid !important;
+    grid-template-columns:repeat(5,1fr) !important;
+    border-bottom:1px solid #111 !important;
+  }
+  .tl {
+    position:relative !important;
+    padding:2.5mm 1mm !important;
+    font-size:8px !important;
+    border-right:1px solid #111 !important;
+  }
+  .tl.sel {
+    outline:3px solid #111 !important;
+    outline-offset:-4px !important;
+  }
+  .tl.sel::after {
+    content:'✓' !important;
+    position:absolute !important;
+    right:1.5mm !important;
+    top:50% !important;
+    transform:translateY(-50%) !important;
+    width:4mm !important;
+    height:4mm !important;
+    line-height:4mm !important;
+    border-radius:50% !important;
+    background:#fff !important;
+    color:#111 !important;
+    font-size:8px !important;
+    font-weight:900 !important;
+    text-align:center !important;
+  }
+
+  .summary {
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+  }
+  .box {
+    min-height:24mm !important;
+    max-height:29mm !important;
+    padding:2.2mm !important;
+    overflow:hidden !important;
+  }
+  .box .pval {
+    display:-webkit-box !important;
+    -webkit-box-orient:vertical !important;
+    -webkit-line-clamp:8 !important;
+    overflow:hidden !important;
+  }
+
+  .sign {
+    min-height:15mm !important;
+    padding:2.5mm !important;
+  }
+  .note {
+    font-size:6.2px !important;
+    line-height:1.15 !important;
+    padding:1.4mm 2mm !important;
+  }
 }
