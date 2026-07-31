@@ -1,0 +1,101 @@
+/* Formato institucional de impresión v2: IMSS, ISSSTE e IMSS-Bienestar */
+@media print {
+  @page { size: Letter portrait; margin: 6mm; }
+  #printSheet { background:#fff !important; }
+  .form {
+    border:1.4px solid #111 !important;
+    font-family:Arial,Helvetica,sans-serif !important;
+    background:#fff !important;
+  }
+  .phead {
+    display:grid !important;
+    grid-template-columns:36mm 1fr 49mm !important;
+    min-height:37mm !important;
+    padding:0 !important;
+    gap:0 !important;
+    border-bottom:1.4px solid #111 !important;
+    align-items:stretch !important;
+  }
+  .plogo {
+    height:auto !important;
+    min-height:37mm !important;
+    padding:3.5mm !important;
+    border-right:1.4px solid #111 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    overflow:visible !important;
+    background:#fff !important;
+  }
+  .plogo img {
+    display:block !important;
+    width:auto !important;
+    height:auto !important;
+    max-width:100% !important;
+    max-height:29mm !important;
+    object-fit:contain !important;
+    object-position:center !important;
+    transform:none !important;
+    clip-path:none !important;
+  }
+  .pcenter {
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    align-items:center !important;
+    text-align:center !important;
+    padding:2.5mm 4mm !important;
+  }
+  .pinst { font-size:13px !important; line-height:1.15 !important; color:#103f2d !important; }
+  .phospital { font-size:11px !important; line-height:1.2 !important; margin-top:2.2mm !important; }
+  .ptitle { font-size:11px !important; line-height:1.2 !important; margin-top:2.2mm !important; }
+  .meta {
+    display:flex !important;
+    flex-direction:column !important;
+    justify-content:center !important;
+    padding:2.5mm 3mm !important;
+    font-size:8.2px !important;
+    line-height:1.65 !important;
+    text-align:right !important;
+  }
+  .bar {
+    background:#f1f1f1 !important;
+    color:#111 !important;
+    border-top:1.2px solid #111 !important;
+    border-bottom:1.2px solid #111 !important;
+    font-size:10px !important;
+    padding:2.2mm 1.5mm !important;
+  }
+  .prow { border-bottom:1px solid #111 !important; }
+  .pcell { min-height:13mm !important; padding:2.2mm 2.5mm !important; }
+  .plab { font-size:7.2px !important; }
+  .pval { font-size:9px !important; line-height:1.25 !important; }
+  .preason { min-height:17mm !important; padding:3mm !important; }
+  .c3 { grid-template-columns:1.75fr 1.1fr .9fr !important; }
+  .c4 { grid-template-columns:1.25fr 1.2fr .9fr .9fr !important; }
+  .c5 { grid-template-columns:1.15fr 1.05fr 1.05fr .85fr .85fr !important; }
+  .c6 { grid-template-columns:repeat(6,1fr) !important; }
+  .triage { border-bottom:1px solid #111 !important; }
+  .tl { padding:3mm 1mm !important; font-size:8.5px !important; }
+  .summary { grid-template-columns:1fr 1fr !important; }
+  .box { min-height:31mm !important; padding:3mm !important; }
+  .sign { min-height:18mm !important; padding:3mm !important; }
+  .note { font-size:6.8px !important; padding:2mm 2.5mm !important; }
+}
+
+/* Encabezado web con logotipo completo */
+.logo {
+  width:94px !important;
+  height:58px !important;
+  padding:6px 8px !important;
+  overflow:visible !important;
+}
+.logo img {
+  width:auto !important;
+  height:auto !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  transform:none !important;
+}
